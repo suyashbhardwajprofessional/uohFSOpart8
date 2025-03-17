@@ -9,4 +9,8 @@ march 15, 2025
 
 march 17, 2025
 01 tried exercises 8.6, 8.7, didn't get through
-01 tried exercises 8.6, 8.7, done
+02 tried exercises 8.6, 8.7, done
+03 been through part 8B 
+04 did exercise 8.8
+05 did exercise 8.9, 8.10, 8.11,
+06 did exercise 8.12
