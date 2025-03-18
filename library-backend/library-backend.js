@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 require('dotenv').config();
 const { GraphQLError } = require('graphql');
+const jwt = require('jsonwebtoken');
 
 mongoose.set('strictQuery', false);
 
@@ -98,6 +99,16 @@ let books = [
 ];*/
 
 const typeDefs = `
+  type User {
+    username: String!
+    favoriteGenre: String
+    id: ID!
+  }
+
+  type Token {
+    value: String!
+  }
+
   type Author {
     name: String!
     id: ID!
@@ -120,6 +131,7 @@ const typeDefs = `
     allBooksByAuthor(author: String!):[Book]
     allBooksOfGenre(genre: String!):[Book]
     allAuthors: [Author!]!
+    me: User
   }
 
   type Mutation {
@@ -134,12 +146,22 @@ const typeDefs = `
       name: String!
       setBornTo: Int!
     ): Author
+
+    createUser(
+      username: String!
+    ): User
+    
+    login(
+      username: String!
+      password: String!
+    ): Token
   }
 
 `;
 
 const Book = require('./models/book');
 const Author = require('./models/author');
+const User = require('./models/user');
 
 const resolvers = {
   Query: {
@@ -156,6 +178,9 @@ const resolvers = {
       return Book.find({ author: skeyAuthor._id.toString() });
     },
     allBooksOfGenre: async (root, args) => Book.find({ genres: { $in: [args.genre] } }),
+    me: (root, args, context) => {
+      return context.currentUser;
+    },
   },
 
   Author: {
@@ -171,7 +196,16 @@ const resolvers = {
   },
 
   Mutation: {
-    addBook: async (root, args) => {
+    addBook: async (root, args, context) => {
+      const currentUser = context.currentUser;
+      if (!currentUser) {
+        throw new GraphQLError('not authenticated', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+          },
+        });
+      }
+
       const theBookAuthor = await Author.findOne({ name: args.author });
       let theAuthor;
       if (!theBookAuthor) {
@@ -187,7 +221,7 @@ const resolvers = {
             },
           });
         }
-        console.log('author was not found, now saved!');
+        console.log('author was not found, now made!');
       } else {
         theAuthor = theBookAuthor;
         console.log('author was already there in database, linked!', theAuthor);
@@ -218,8 +252,9 @@ const resolvers = {
       }
       const locateQuery = { name: args.name };
       console.log('found author ', authorInQuestion);
+      let updateRes;
       try {
-        const updateRes = await Author.findOneAndUpdate(locateQuery, { born: args.setBornTo }, { new: false });
+        updateRes = await Author.findOneAndUpdate(locateQuery, { born: args.setBornTo }, { new: false });
       } catch (error) {
         throw new GraphQLError('Editing author failed', {
           extensions: {
@@ -232,6 +267,39 @@ const resolvers = {
       return updateRes;
       console.log('made an updated');
     },
+
+    createUser: async (root, args) => {
+      const user = new User({ username: args.username });
+
+      return user.save().catch(error => {
+        throw new GraphQLError('Creating the user failed', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: args.username,
+            error,
+          },
+        });
+      });
+    },
+
+    login: async (root, args) => {
+      const user = await User.findOne({ username: args.username });
+
+      if (!user || args.password !== 'secret') {
+        throw new GraphQLError('wrong credentials', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+          },
+        });
+      }
+
+      const userForToken = {
+        username: user.username,
+        id: user._id,
+      };
+
+      return { value: jwt.sign(userForToken, process.env.JWT_SECRET) };
+    },
   },
 };
 
@@ -242,6 +310,14 @@ const server = new ApolloServer({
 
 startStandaloneServer(server, {
   listen: { port: 4000 },
+  context: async ({ req, res }) => {
+    const auth = req ? req.headers.authorization : null;
+    if (auth && auth.startsWith('Bearer ')) {
+      const decodedToken = jwt.verify(auth.substring(7), process.env.JWT_SECRET);
+      const currentUser = await User.findById(decodedToken.id).populate('favoriteGenre');
+      return { currentUser };
+    }
+  },
 }).then(({ url }) => {
   console.log(`Server ready at ${url}`);
 });
