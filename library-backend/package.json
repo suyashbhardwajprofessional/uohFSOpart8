@@ -5,13 +5,18 @@
   "main": "library-backend.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "node library-backend.js"
+    "server": "nodemon library-backend.js"
   },
   "author": "suyash bhardwaj",
   "license": "ISC",
   "dependencies": {
     "@apollo/server": "^4.11.3",
+    "dotenv": "^16.4.7",
     "graphql": "^16.10.0",
+    "mongoose": "^8.12.1",
     "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }
