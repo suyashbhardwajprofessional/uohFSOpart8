@@ -1,8 +1,8 @@
 import { useQuery } from '@apollo/client'
 import { ALL_BOOKS } from "./queries";
 
-const Books = (props) => {
-  if (!props.show) {
+const Books = ({ show }) => {
+  if (!show) {
     return null
   }
 
@@ -24,10 +24,10 @@ const Books = (props) => {
             <th>author</th>
             <th>published</th>
           </tr>
-          {books.map((a) => (
-            <tr key={a.title}>
+          {books.map((a, index) => (
+            <tr key={index}>
               <td>{a.title}</td>
-              <td>{a.author}</td>
+              <td>{a.author.name}</td>
               <td>{a.published}</td>
             </tr>
           ))}

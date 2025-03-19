@@ -21,3 +21,7 @@ march 18, 2025
 04 tried exercise 8.13, didn't get through
 05 tried exercise 8.13, done
 06 tried exercise 8.14, 8.15 done
+
+march 19, 2025
+01 test ran teh exercises done so far, slept
+02 
