@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@apollo/client'
 
 import { EDIT_BORN } from './mutations'
-import { ALL_AUTHORS } from "./queries";
+import { ALL_AUTHORS, ME } from "./queries";
 
 const Notify = ({errorMessage}) => {
   if ( !errorMessage ) {
@@ -25,6 +25,7 @@ const UpdateForm = ({ show }) => {
   const [error, setError] = useState('')
 
   const [ updateAuthor, result ] = useMutation(EDIT_BORN, {
+    refetchQueries: [ { query: ALL_AUTHORS }, { query: ME } ],
     onError: (error) => {
       const messages = error.graphQLErrors.map(e => e.message).join('\n')
       setError(messages)
@@ -62,6 +63,7 @@ const UpdateForm = ({ show }) => {
         <div>
           select author
           <select onInput={({ target })=>setName(target.value)} value={name}>
+            <option value=''>select an author</option>
             {authorsToSelectFrom.map(oneauthor=><option value={oneauthor.name}>{oneauthor.name}</option>)}
           </select>
         </div>
