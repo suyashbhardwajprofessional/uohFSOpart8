@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@apollo/client'
 import { CREATE_BOOK } from "./mutations";
-import { ALL_BOOKS } from "./queries";
+import { ALL_BOOKS, ME, ALL_AUTHORS } from "./queries";
 
 const Notify = ({errorMessage}) => {
   if ( !errorMessage ) {
@@ -30,7 +30,7 @@ const NewBook = (props) => {
   }
   
   const [ newBook ] = useMutation(CREATE_BOOK, {
-    refetchQueries: [  {query: ALL_BOOKS } ],
+    refetchQueries: [  {query: ALL_BOOKS}, {query: ME}, {QUERY: ALL_AUTHORS} ],
 
     onError: (error) => {
       const messages = error.graphQLErrors.map(e => e.message).join('\n')

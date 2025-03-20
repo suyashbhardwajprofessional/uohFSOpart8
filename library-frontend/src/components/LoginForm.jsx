@@ -23,7 +23,7 @@ const LoginForm = ({ show, setError, setToken }) => {
         setToken(token)
         localStorage.setItem('phonenumbers-user-token', token)
         setNotificationMessage('')
-      }, 4000);
+      }, 2000);
     }
   }, [result.data])
 
